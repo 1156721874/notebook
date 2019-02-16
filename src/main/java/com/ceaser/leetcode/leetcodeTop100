@@ -1,0 +1,1849 @@
+第01-100题
+【Leetcode-easy-1】 Two Sum 两数之和
+平生不识TwoSum，刷尽LeetCode也枉然
+1
+思路：
+为了提高时间的复杂度，需要用空间来换，那么就是说只能遍历一个数字，那么另一个数字呢，我们可以事先将其存储起来，使用一个HashMap，来建立数字和其坐标位置之间的映射，我们都知道HashMap是常数级的查找效率，这样，我们在遍历数组的时候，用target减去遍历到的数字，就是另一个需要的数字了，直接在HashMap中查找其是否存在即可，注意要判断查找到的数字不是第一个数字，比如target是4，遍历到了一个2，那么另外一个2不能是之前那个2，整个实现步骤为：先遍历一遍数组，建立HashMap映射，然后再遍历一遍，开始查找，找到则记录index。
+
+import java.util.*;
+public class Solution {
+    /**
+     * You may assume that each input would have exactly one solution
+     *
+     * use Map
+     */
+    public int[] twoSum(int[] nums, int target) {
+        Map<Integer, Integer> map = new HashMap<>();
+        for (int i = 0; i < nums.length; i ++){
+            int remainder = target - nums[i];
+            if(map.containsKey(nums[i]))
+                return new int[]{map.get(nums[i]), i};
+            map.put(remainder, i);
+        }
+        throw new IllegalArgumentException("no solution.");
+    }
+}
+
+【Leetcode-medium-2】 Add Two Numbers 两个数字相加
+思路：建立一个新链表，然后把输入的两个链表从头往后撸，每两个相加，添加一个新节点到新链表后面，就是要处理下进位问题。还有就是最高位的进位问题要最后特殊处理一下。
+
+/**
+ * Input: (2 -> 4 -> 3) + (5 -> 6 -> 4)
+ * Output: 7 -> 0 -> 8
+ * Definition for singly-linked list.
+ * public class ListNode {
+ *     int val;
+ *     ListNode next;
+ *     ListNode(int x) { val = x; }
+ * }
+ * 使用dummyHead避免写重复的代码，非常巧妙
+ */
+public class Solution {
+    public ListNode addTwoNumbers(ListNode l1, ListNode l2) {
+        ListNode dummyHead = new ListNode(0);  // 第二个结点是链表的头结点
+        int increment = 0;
+        ListNode currNode = dummyHead;
+
+        for (ListNode n1 = l1, n2 = l2; l1 != null || l2 != null;){
+            int x = l1 != null ? l1.val : 0;
+            int y = l2 != null ? l2.val : 0;
+
+            int result = x + y + increment;
+            currNode.next = new ListNode(result % 10);
+            increment = result / 10;
+            currNode = currNode.next;
+
+            if (l1 != null) l1 = l1.next;
+            if (l2 != null) l2 = l2.next;
+        }
+
+        if (increment == 1){
+            currNode.next = new ListNode(1);
+        }
+
+        return dummyHead.next;
+    }
+}
+
+【Leetcode-medium-3】 Longest Substring Without Repeating Characters 最长无重复字符的子串
+/**
+* Given “abcabcbb”, the answer is “abc”, which the length is 3.
+* Given “bbbbb”, the answer is “b”, with the length of 1.
+*
+*/
+import java.util.*;
+public class Solution {
+    public int lengthOfLongestSubstring(String s) {
+        int maxLen = 0;
+        StringBuilder sub = new StringBuilder(s.length());
+        int fromIndex = 0;
+
+        for (int i = 0; i < s.length(); i ++){
+            char ch = s.charAt(i);
+
+            int index = sub.indexOf(ch+"", fromIndex);  // 重复“字符”（字符串）的位置
+
+            if (index != -1) fromIndex = index+1;  // 不断调整起始下标
+
+            sub.append(ch);
+
+            int len = sub.length() - fromIndex;  // 总长度 - 起始下标 = 当前子字符串的长度
+
+            if (maxLen < len) maxLen = len;
+        }
+
+        return maxLen;
+    }
+}
+
+【Leetcode-hard-4】
+Median of Two Sorted Arrays 两个有序数组的中位数
+
+思路：限制了时间复杂度为O(log (m+n))，应该使用二分查找法来求解。难点在于要在两个未合并的有序数组之间使用二分法，这里我们需要定义一个函数来找到第K个元素，由于两个数组长度之和的奇偶不确定，因此需要分情况来讨论，对于奇数的情况，直接找到最中间的数即可，偶数的话需要求最中间两个数的平均值。下面重点来看如何实现找到第K个元素，首先我们需要让数组1的长度小于或等于数组2的长度，那么我们只需判断如果数组1的长度大于数组2的长度的话，交换两个数组即可，然后我们要判断小的数组是否为空，为空的话，直接在另一个数组找第K个即可。还有一种情况是当K = 1时，表示我们要找第一个元素，只要比较两个数组的第一个元素，返回较小的那个即可。
+
+public class Solution {
+    public double findMedianSortedArrays(int[] nums1, int[] nums2) {
+        int m = nums1.length, n = nums2.length;
+        if (m < n) return findMedianSortedArrays(nums2, nums1);
+        if (n == 0) return (nums1[(m - 1) / 2] + nums1[m / 2]) / 2.0;
+        int left = 0, right = 2 * n;
+        while (left <= right) {
+            int mid2 = (left + right) / 2;
+            int mid1 = m + n - mid2;
+            double L1 = mid1 == 0 ? Double.MIN_VALUE : nums1[(mid1 - 1) / 2];
+            double L2 = mid2 == 0 ? Double.MIN_VALUE : nums2[(mid2 - 1) / 2];
+            double R1 = mid1 == m * 2 ? Double.MAX_VALUE : nums1[mid1 / 2];
+            double R2 = mid2 == n * 2 ? Double.MAX_VALUE : nums2[mid2 / 2];
+            if (L1 > R2) left = mid2 + 1;
+            else if (L2 > R1) right = mid2 - 1;
+            else return (Math.max(L1, L2) + Math.min(R1, R2)) / 2;
+        }
+        return -1;
+    }
+}
+
+【Leetcode-medium-5】 Longest Palindromic Substring 最长回文串
+/**
+* Input: “babad” Output: “bab”
+* Input: “cbbd” Output: “bb”
+*/
+class Solution {
+    public String longestPalindrome(String s) {
+        int start = 0, end = 0;
+        for (int i = 0; i < s.length()-1; i ++){
+            int len1 = expandAroundCenter(s, i, i);  // 假设回文字符串的长度是奇数
+            int len2 = expandAroundCenter(s, i, i+1);  // 假设回文字符串的长度是偶数
+            int len = Math.max(len1, len2);
+            // 边界判断
+            if (len > end-start){
+                start = i - (len-1)/2;  // 计算新的边界
+                end = i + len/2;
+            }
+        }
+        return s.substring(start, end+1);
+
+    }
+
+    // 从left,right向左右扩展
+    // 双参数真是很巧妙，一直卡在这里了
+    private int expandAroundCenter(String s, int left, int right){
+        int L = left, R = right;
+        for (; L >= 0 && R < s.length(); L --, R ++){
+            if (s.charAt(L) != s.charAt(R))
+                break;
+        }
+        return R-L-1;  // 根据example判断是否减去1
+    }
+}
+
+【Leetcode-hard-10】 Regular Expression Matching 正则表达式匹配
+Some examples:
+isMatch(“aa”,”a”) → false
+isMatch(“aa”,”aa”) → true
+isMatch(“aaa”,”aa”) → false
+isMatch(“aa”, “a*”) → true
+isMatch(“aa”, “.*”) → true
+isMatch(“ab”, “.*”) → true
+isMatch(“aab”, “c*a*b”) → true
+
+思路：用递归Recursion来解，大概思路如下
+若p为空，若s也为空，返回true，反之返回false
+若p的长度为1，若s长度也为1，且相同或是p为’.’则返回true，反之返回false
+若p的第二个字符不为*，若此时s为空返回false，否则判断首字符是否匹配，且从各自的第二个字符开始调用递归函数匹配
+若p的第二个字符为*，若s不为空且字符匹配，调用递归函数匹配s和去掉前两个字符的p，若匹配返回true，否则s去掉首字母
+返回调用递归函数匹配s和去掉前两个字符的p的结果
+
+public class Solution {
+    public boolean isMatch(String s, String p) {
+
+        if(p.length() == 0)
+            return s.length() == 0;
+
+        //p's length 1 is special case
+        if(p.length() == 1 || p.charAt(1) != '*'){
+            if(s.length() < 1 || (p.charAt(0) != '.' && s.charAt(0) != p.charAt(0)))
+                return false;
+            return isMatch(s.substring(1), p.substring(1));
+
+        }else{
+            int len = s.length();
+
+            int i = -1;
+            while(i<len && (i < 0 || p.charAt(0) == '.' || p.charAt(0) == s.charAt(i))){
+                if(isMatch(s.substring(i+1), p.substring(2)))
+                    return true;
+                i++;
+            }
+            return false;
+        }
+    }
+}
+
+【Leetcode-medium-11】 Container With Most Water 装最多水的容器
+思路：
+我们认为长度越长且高度越大，则面积越大。
+现在，使用两个指针分别指向首、尾，这时它的宽度是最大的。
+可能还会出现面积更大的情况，只有当高度变大的时候，所以可以移动两个指针中的较小者，这样可以能会使高度增加以弥补长度变短造成面积减少的损失。
+一直移动两者中较小者，直到两者相遇，取各种情况的最大值即是最后的结果。
+
+public int maxArea(int[] height){
+        int maxarea = 0;
+        int l = 0, r = height.length-1;
+        while(l < r){
+            int area = calArea(l, height[l], r, height[r]);
+            if (area > maxarea) maxarea = area;
+
+            if (height[l] <= height[r]) l ++;
+            else                        r --;
+        }
+        return maxarea;
+    }
+
+
+    private int calArea(int i, int h1, int j, int h2){
+        return  Math.min(h1, h2) * (j-i);
+    }
+
+【Leetcode-medium-15】 3Sum 三数之和
+思路：
+我们对原数组进行排序，然后开始遍历排序后的数组，这里注意不是遍历到最后一个停止，而是到倒数第三个就可以了。这里我们可以先做个剪枝优化，就是当遍历到正数的时候就break，为啥呢，因为我们的数组现在是有序的了，如果第一个要fix的数就是正数了，那么后面的数字就都是正数，就永远不会出现和为0的情况了。然后我们还要加上重复就跳过的处理，处理方法是从第二个数开始，如果和前面的数字相等，就跳过，因为我们不想把相同的数字fix两次。对于遍历到的数，用0减去这个fix的数得到一个target，然后只需要再之后找到两个数之和等于target即可。我们用两个指针分别指向fix数字之后开始的数组首尾两个数，如果两个数和正好为target，则将这两个数和fix的数一起存入结果中。然后就是跳过重复数字的步骤了，两个指针都需要检测重复数字。如果两数之和小于target，则我们将左边那个指针i右移一位，使得指向的数字增大一些。同理，如果两数之和大于target，则我们将右边那个指针j左移一位，使得指向的数字减小一些。
+
+  public List<List<Integer>> threeSum(int[] nums) {
+        ArrayList<List<Integer>> result = new ArrayList<List<Integer>>();
+        if (nums.length < 3) return result;
+        Arrays.sort(nums);
+        ArrayList<Integer> temp = null;
+        for (int i = 0; i < nums.length; i++) {
+            if (i > 0 && nums[i] == nums[i - 1]) continue;  //选定nums[i]为第一个数，并去重
+            int left = i + 1;
+            int right = nums.length - 1;
+            while (right > left) {
+                int sum = nums[i] + nums[left] + nums[right];
+                if (sum == 0) {
+                    temp = new ArrayList<Integer>();
+                    temp.add(nums[i]);
+                    temp.add(nums[left]);
+                    temp.add(nums[right]);
+                    result.add(temp);
+                    while (left < right && nums[left] == nums[left + 1]) left++;  //去重
+                    while (left + 1 < right && nums[right] == nums[right - 1]) right--;
+                }
+                if (sum <= 0) left++;
+                else if (sum >= 0) right--;
+            }
+        }
+        return result;
+    }
+
+【Leetcode-Easy-20】 Valid Parentheses 验证括号
+思路：需要用一个栈，我们开始遍历输入字符串，如果当前字符为左半边括号时，则将其压入栈中，如果遇到右半边括号时，若此时栈为空，则直接返回false，如不为空，则取出栈顶元素，若为对应的左半边括号，则继续循环，反之返回false
+
+class Solution {
+    public boolean isValid(String s) {
+        LinkedList<String> stack  = new LinkedList<>();
+        HashSet<String> set = new HashSet<>();
+        set.add("(");
+        set.add("[");
+        set.add("{");
+        for (int i = 0; i < s.length(); i ++){
+            String part = s.charAt(i) + "";
+            if (set.contains(part)) stack.push(part);
+            else{
+                if (stack.isEmpty()) return false;
+                String prepart = stack.pop();
+                if ("}".equals(part) && !"{".equals(prepart) ||
+                    ")".equals(part) && !"(".equals(prepart) ||
+                    "]".equals(part) && !"[".equals(prepart)){
+                    return false;
+                }
+            }
+        }
+        return stack.isEmpty();
+    }
+}
+
+//更为巧妙的解法
+public boolean isValid(String s) {
+    Stack<Character> stack = new Stack<Character>();
+    for (char c : s.toCharArray()) {
+        if (c == '(')
+            stack.push(')');
+        else if (c == '{')
+            stack.push('}');
+        else if (c == '[')
+            stack.push(']');
+        else if (stack.isEmpty() || stack.pop() != c)
+            return false;
+    }
+    return stack.isEmpty();
+}
+
+【Leetcode-Easy-21】 Merge Two Sorted Lists
+思路：巧用头结点（哑结点）
+
+/**
+ * Definition for singly-linked list.
+ * public class ListNode {
+ *     int val;
+ *     ListNode next;
+ *     ListNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    public ListNode mergeTwoLists(ListNode l1, ListNode l2) {
+        ListNode dummyHead = new ListNode(0);
+        ListNode currNode = dummyHead;
+
+
+        while (l1 != null && l2 != null){
+            if (l1.val < l2.val){
+                currNode.next = l1;
+                l1 = l1.next;
+            }else{
+                currNode.next = l2;
+                l2 = l2.next;
+            }
+            currNode = currNode.next;
+        }
+
+        if (l1 != null) currNode.next = l1;
+        if (l2 != null) currNode.next = l2;
+
+        return dummyHead.next;
+    }
+}
+
+【Leetcode-Medium-22】 Generate Parentheses
+思路：
+回溯，这里的想法是只添加‘(’和‘)’，我们知道这将保证我们的解决方案(而不是添加1太多关闭)。
+一旦我们添加了一个‘(’然后我们将放弃它并尝试一个‘)’，它只能关闭一个有效的’(‘。这些步骤中的每一个都被递归地调用。
+
+public List<String> generateParenthesis(int n) {
+        List<String> list = new ArrayList<>();
+        backtrack(list, "", 0, 0, n);
+        return list;
+    }
+
+
+    private void backtrack(List<String> list, String str, int open, int close, int max){
+        if (str.length() == 2*max){
+            list.add(str);
+            return;
+        }
+
+        if (open < max)
+            backtrack(list, str+"(", open+1, close, max);
+
+        if (close < open)
+            backtrack(list, str+")", open, close+1, max);
+    }
+
+【Leetcode-hard-23】 Merge k Sorted Lists 合并k个有序链表
+思路：
+这里需要用到分治法 Divide and Conquer Approach。简单来说就是不停的对半划分，比如k个链表先划分为合并两个k/2个链表的任务，再不停的往下划分，直到划分成只有一个或两个链表的任务，开始合并。举个例子来说比如合并6个链表，那么按照分治法，我们首先分别合并1和4,2和5,3和6。这样下一次只需合并3个链表，我们再合并1和3，最后和2合并就可以了。
+
+
+public ListNode mergeKLists(ArrayList<ListNode> lists) {
+    if(lists==null || lists.size()==0)
+        return null;
+    return helper(lists,0,lists.size()-1);
+}
+private ListNode helper(ArrayList<ListNode> lists, int l, int r)
+{
+    if(l<r)
+    {
+        int m = (l+r)/2;
+        return merge(helper(lists,l,m),helper(lists,m+1,r));
+    }
+    return lists.get(l);
+}
+private ListNode merge(ListNode l1, ListNode l2)
+{
+    ListNode dummy = new ListNode(0);
+    dummy.next = l1;
+    ListNode cur = dummy;
+    while(l1!=null && l2!=null)
+    {
+        if(l1.val<l2.val)
+        {
+            l1 = l1.next;
+        }
+        else
+        {
+            ListNode next = l2.next;
+            cur.next = l2;
+            l2.next = l1;
+            l2 = next;
+        }
+        cur = cur.next;
+    }
+    if(l2!=null)
+        cur.next = l2;
+    return dummy.next;
+}
+
+【Leetcode-hard-32】 Longest Valid Parentheses 最长有效括号
+思路：
+借助栈来求解，需要定义个start变量来记录合法括号串的起始位置，我们遍历字符串，如果遇到左括号，则将当前下标压入栈，如果遇到右括号，如果当前栈为空，则将下一个坐标位置记录到start，如果栈不为空，则将栈顶元素取出，此时若栈为空，则更新结果和i - start + 1中的较大值，否则更新结果和i - 栈顶元素中的较大值
+
+public class Demo2 {
+    public int longestValidParentheses(String s) {
+        if (s == null || s.length() < 1)
+            return 0;
+        Stack<Integer> stack = new Stack<Integer>();
+        int max = 0, left = -1;
+        for (int i = 0; i < s.length(); i++) {
+            //如果遍历到左括号，压入堆栈
+            if (s.charAt(i) == '(')
+                stack.push(i);
+            else {
+                if (!stack.isEmpty()) {
+                    stack.pop();
+                    if (!stack.isEmpty())
+                        max = Math.max(max, i - stack.peek());
+                    else
+                        max = Math.max(max, i - left);
+                } else
+                    //如果堆栈为空，说明当前的有括号无法配对，需要重新设置left的值
+                    left = i;
+            }
+        }
+        return max;
+    }
+}
+
+【Leetcode-medium-33】 Search in Rotated Sorted Array 在旋转有序数组中搜索
+Suppose a sorted array is rotated at some pivot unknown to you beforehand.
+(i.e., 0 1 2 4 5 6 7 might become 4 5 6 7 0 1 2).
+You are given a target value to search. If found in the array return its index, otherwise return -1.
+You may assume no duplicate exists in the array.
+
+思路：
+这道题让在旋转数组中搜索一个给定值，若存在返回坐标，若不存在返回-1。我们还是考虑二分搜索法，但是这道题的难点在于我们不知道原数组在哪旋转了，我们还是用题目中给的例子来分析，对于数组[0 1 2 4 5 6 7] 共有下列七种旋转方法：
+0　　1　　2　　 4　　5　　6　　7
+7　　0　　1　　 2　　4　　5　　6
+6　　7　　0　　 1　　2　　4　　5
+5　　6　　7　　 0　　1　　2　　4
+4　　5　　6　　7　　0　　1　　2
+2　　4　　5　　6　　7　　0　　1
+1　　2　　4　　5　　6　　7　　0
+二分搜索法的关键在于获得了中间数后，判断下面要搜索左半段还是右半段，我们观察上面红色的数字都是升序的，由此我们可以观察出规律，如果中间的数小于最右边的数，则右半段是有序的，若中间数大于最右边数，则左半段是有序的，我们只要在有序的半段里用首尾两个数组来判断目标值是否在这一区域内，这样就可以确定保留哪半边了
+
+public int search(int[] A, int target) {
+    if(A==null || A.length==0)
+        return -1;
+    int l = 0;
+    int r = A.length-1;
+    while(l<=r)
+    {
+        int m = (l+r)/2;
+        if(target == A[m])
+            return m;
+        if(A[m]<A[r])
+        {
+            if(target>A[m] && target<=A[r])
+                l = m+1;
+            else
+                r = m-1;
+        }
+        else
+        {
+            if(target>=A[l] && target<A[m])
+                r = m-1;
+            else
+                l = m+1;
+        }
+    }
+    return -1;
+}
+
+【Leetcode-medium-34】 Search for a Range 搜索一个范围
+For example,
+Given [5, 7, 7, 8, 8, 10] and target value 8,
+return [3, 4].
+
+思路：
+只用两次二分查找。 如果我们不寻找那个元素先，而是直接相等的时候也向一个方向继续夹逼，如果向右夹逼，最后就会停在右边界，而向左夹逼则会停在左边界，如此用停下来的两个边界就可以知道结果了，只需要两次二分查找。
+
+public int[] searchRange(int[] A, int target) {
+    int[] res = {-1,-1};
+    if(A==null || A.length==0)
+    {
+        return res;
+    }
+    int ll = 0;
+    int lr = A.length-1;
+    while(ll<=lr)
+    {
+        int m = (ll+lr)/2;
+        if(A[m]<target)
+        {
+            ll = m+1;
+        }
+        else
+        {
+            lr = m-1;
+        }
+    }
+    int rl = 0;
+    int rr = A.length-1;
+    while(rl<=rr)
+    {
+        int m = (rl+rr)/2;
+        if(A[m]<=target)
+        {
+            rl = m+1;
+        }
+        else
+        {
+            rr = m-1;
+        }
+    }
+    if(ll<=rr)
+    {
+        res[0] = ll;
+        res[1] = rr;
+    }
+    return res;
+}
+
+【Leetcode-easy-35】 Search Insert Position 搜索插入位置
+思路：
+二分查找。每次取中间，如果等于目标即返回，否则根据大小关系切去一半。因此算法复杂度是O(logn)，空间复杂度O(1)
+
+public int searchInsert(int[] A, int target) {
+    if(A == null || A.length == 0)
+    {
+        return 0;
+    }
+    int l = 0;
+    int r = A.length-1;
+    while(l<=r)
+    {
+        int mid = (l+r)/2;
+        if(A[mid]==target)
+            return mid;
+        if(A[mid]<target)
+            l = mid+1;
+        else
+            r = mid-1;
+    }
+    return l;
+}
+
+【Leetcode-easy-39】 Combination Sum 组合之和
+For example, given candidate set 2,3,6,7 and target 7,
+A solution set is:
+[7]
+[2, 2, 3]
+
+思路：
+NP问题，先排好序，然后每次递归中把剩下的元素一一加到结果集合中，并且把目标减去加入的元素，然后把剩下元素（包括当前加入的元素）放到下一层递归中解决子问题。算法复杂度因为是NP问题，所以自然是指数量级的。
+
+public ArrayList<ArrayList<Integer>> combinationSum(int[] candidates, int target) {
+    ArrayList<ArrayList<Integer>> res = new ArrayList<ArrayList<Integer>>();
+    if(candidates == null || candidates.length==0)
+        return res;
+    Arrays.sort(candidates);
+    helper(candidates,0,target,new ArrayList<Integer>(),res);
+    return res;
+}
+private void helper(int[] candidates, int start, int target, ArrayList<Integer> item,
+ArrayList<ArrayList<Integer>> res)
+{
+    if(target<0)
+        return;
+    if(target==0)
+    {
+        res.add(new ArrayList<Integer>(item));
+        return;
+    }
+    for(int i=start;i<candidates.length;i++)
+    {
+        if(i>0 && candidates[i]==candidates[i-1])
+            continue;
+        item.add(candidates[i]);
+        helper(candidates,i,target-candidates[i],item,res);
+        item.remove(item.size()-1);
+    }
+}
+
+*注意在实现中for循环中第一步有一个判断，那个是为了去除重复元素产生重复结果的影响，
+因为在这里每个数可以重复使用，所以重复的元素也就没有作用了，所以应该跳过那层递归。
+
+【Leetcode-Medium-46】 Permutations 全排列
+置换实际上是给出所有的排列方式，同样是用深度优先搜索，不过为了避免重复选择的情况，我们要保证两点：第一，所有数必须是数组中的，第二，数组中每个数只能用不多于也不少于一次。如果我们要单独写一个函数，来判断下一轮搜索该选择哪一个数就很麻烦了。这里有一个技巧，我们可以只将数两两交换，不过交换时只能跟自己后面的交换。
+
+public class Solution {
+
+    List<List<Integer>> res;
+    boolean[] used;
+
+    public List<List<Integer>> permute(int[] nums) {
+        res = new LinkedList<List<Integer>>();
+        used = new boolean[nums.length];
+        List<Integer> tmp = new LinkedList<Integer>();
+        helper(nums, tmp);
+        return res;
+    }
+
+    private void helper(int[] nums, List<Integer> tmp){
+        if(tmp.size() == nums.length){
+            List<Integer> list = new LinkedList<Integer>(tmp);
+            res.add(list);
+        } else {
+            for(int idx = 0; idx < nums.length; idx++){
+                // 遇到已经加过的元素就跳过
+                if(used[idx]){
+                    continue;
+                }
+                // 加入该元素后继续搜索
+                used[idx] = true;
+                tmp.add(nums[idx]);
+                helper(nums, tmp);
+                tmp.remove(tmp.size()-1);
+                used[idx] = false;
+            }
+        }
+    }
+}
+
+【Leetcode-Easy-53】 Maximum Subarray 最大连续子数组的和
+思路：定义两个变量res和curSum，其中res保存最终要返回的结果，即最大的子数组之和.
+curSum初始值为0，每遍历一个数字num，比较curSum + num和num中的较大值存入curSum，
+然后再把res和curSum中的较大值存入res，以此类推直到遍历完整个数组，可得到最大子数组的值存在res
+
+class Solution {
+    public int maxSubArray(int[] nums) {
+        int res = nums[0];
+        int curSum = 0;
+        for (int num : nums){
+            curSum = Math.max(num, num + curSum);
+            res = Math.max(res, curSum);
+        }
+        return res;
+    }
+}
+
+【Leetcode-Easy-70】 Climbing Stairs 爬楼梯，n阶1步2步
+
+思路：斐波拉契，第n阶只与第 n - 1 阶和第 n - 2 阶有关，关系为ways[n] = ways[n - 1] + ways[n - 2]
+
+// one
+public int climbStairs(int n) {
+        if (n <= 2) return n;
+        int result = 0;
+        int first = 1;
+        int second = 2;
+        for (int i = 3; i <= n; i ++) {
+            result = first + second;
+            int temp = first;
+            first = second;
+            second = second + temp;
+        }
+        return result;
+    }
+
+// two
+public int climbStairs(int n) {
+        if (n <= 1) return n;
+        int[] dp = new int[n];
+        dp[0] = 1;
+        dp[1] = 2;
+        for (int i = 2; i < n; ++i) {
+            dp[i] = dp[i - 1] + dp[i - 2];
+        }
+        return dp[n - 1];
+    }
+
+// three
+public int climbStairs(int n) {
+        if (n <= 1) return n;
+        int oneStep = 1; // 走一步的可能
+        int twoStep = 1;  // 走两步的可能
+        int res = 0;
+        for (int i = 2; i <= n; i ++) {
+            res = oneStep + twoStep;
+            twoStep = oneStep;
+            oneStep = res;
+        }
+        return res;
+    }
+
+【Leetcode-Medium-94】 Binary Tree Inorder Traversal 二叉树的中序遍历
+思路：
+- 递归方式：对左子结点调用递归函数，根节点访问值，右子节点再调用递归函数
+- 迭代方式：使用栈的解法，也是符合本题要求使用的解法之一，需要用栈来做，思路是从根节点开始，先将根节点压入栈，然后再将其所有左子结点压入栈，然后取出栈顶节点，保存节点值，再将当前指针移到其右子节点上，若存在右子节点，则在下次循环时又可将其所有左子结点压入栈中。这样就保证了访问顺序为左-根-右
+
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    // ----------------------------------------
+    // 迭代方式
+    public List<Integer> inorderTraversal(TreeNode root){
+        List<Integer> res = new ArrayList<>();
+        if (root == null) return res;
+
+        LinkedList<TreeNode> stack = new LinkedList<>();
+        TreeNode currNode = root;
+        while (currNode != null || !stack.isEmpty()){
+            while (currNode != null){
+                stack.push(currNode);
+                currNode = currNode.left;
+            }
+            if (!stack.isEmpty()){
+                currNode = stack.pop();
+                res.add(currNode.val);
+                currNode = currNode.right;
+            }
+        }
+        return res;
+    }
+
+
+    // --------------------------------------
+    // 递归方式
+    public List<Integer> inorderTraversal0(TreeNode root) {
+        List<Integer> res = new ArrayList<>();
+        helper(root, res);
+        return res;
+    }
+
+    private void helper2(TreeNode root, List<Integer> res){
+        if (root == null) return;
+        helper(root.left, res);
+        res.add(root.val);
+        helper2(root.right, res);
+    }
+}
+
+第101-200题
+【Leetcode-Easy-101】 Symmetric Tree 判断对称树
+思路：判断二叉树是否是对称树，比如有两个节点n1, n2，我们需要比较n1的左子节点的值和n2的右子节点的值是否相等，同时还要比较n1的右子节点的值和n2的左子结点的值是否相等，
+以此类推比较完所有的左右两个节点。我们可以用递归和迭代两种方法来实现，写法不同，但是算法核心都一样。
+
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    // 递归
+    public boolean isSymmetric(TreeNode root) {
+        if (root == null) return true;
+        return isSymmetric(root.left, root.right);
+    }
+
+    private boolean isSymmetric(TreeNode root1, TreeNode root2){
+        if (root1 == null && root2 == null) return true;
+        if (root1 == null || root2 == null) return false;  // 两者只有一者为null，则返回false
+        if (root1.val != root2.val) return false;  // 两者均不为null，但两者的值不相等
+        return isSymmetric(root1.left, root2.right) && isSymmetric(root1.right, root2.left);
+    }
+}
+
+【Leetcode-easy-104】 Maximum Depth of Binary Tree 二叉树的最大深度
+思路：
+- 递归：深度优先搜索DFS，递归的完美应用，跟求二叉树的最小深度问题原理相同
+层次遍历
+
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    // 递归 最大深度
+    public int maxDepth(TreeNode root) {
+        if (root == null) return 0;
+        int left = maxDepth(root.left);
+        int right = maxDepth(root.right);
+
+        return Math.max(left, right)+1;
+    }
+}
+
+【Leetcode-Easy-110】 Balanced Binary Tree 判断平衡二叉树
+思路：高度平衡二叉树是每一个节点的两个字数的深度差不能超过1，那么我们肯定需要一个求各个点深度的函数，然后对每个节点的两个子树来比较深度差，时间复杂度为O(NlgN)，
+
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    public boolean isBalanced(TreeNode root) {
+        if (root == null) return true;
+
+        int l = depth(root.left);
+        int r = depth(root.right);
+
+        if (Math.abs(l-r) > 1) return false;
+        return isBalanced(root.left) && isBalanced(root.right);
+    }
+
+    private int depth(TreeNode root){
+        if (root == null) return 0;
+        int l = depth(root.left);
+        int r = depth(root.right);
+        return Math.max(l, r) + 1;
+    }
+}
+
+【Leetcode-easy-111】 Minimum Depth of Binary Tree 二叉树的最小深度
+思路：层次遍历二叉树
+
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    public int minDepth(TreeNode root) {
+        if (root == null) return 0;
+        // if (root.left == null || root.right == null) return 1;
+
+        LinkedList<TreeNode> queue = new LinkedList<>();
+        queue.offer(root);
+        int level = 0;
+        while (!queue.isEmpty()){
+            level ++;
+            int len = queue.size();
+            for (int i = 0; i < len; i ++){
+                TreeNode currNode = queue.poll();
+                if (currNode.left == null && currNode.right == null)
+                    return level;
+                if (currNode.left != null) queue.offer(currNode.left);
+                if (currNode.right != null) queue.offer(currNode.right);
+            }
+        }
+        return level;
+    }
+}
+
+【Leetcode-Easy-121】 Best Time to Buy and Sell Stock 买卖股票的最佳时间
+思路：找出截止当前位置的最小值和截至当前位置的最大值，
+记录两者之差，保留最大的差值。
+
+class Solution {
+    public int maxProfit(int[] prices) {
+        if (prices == null || prices.length == 0) return 0;
+        int profit = 0;
+        int low = prices[0];
+        for (int i = 0; i < prices.length; i ++){
+            low = Math.min(low, prices[i]);
+            profit = Math.max(profit, prices[i]-low);
+        }
+        return profit;
+    }
+}
+
+【Leetcode-Hard-124】 Binary Tree Maximum Path Sum 求二叉树的最大路径和
+思路：递归，二叉树的最大路径和。
+路径，如果选择当前结点，而且其父结点被选择，则它的左右孩子结点最多只能选择一个。
+
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+
+
+/**
+ *       -1
+ *      /  |
+ *     2  3
+ *        / |
+ *       -1  2
+ *       /
+ *      4
+ */
+class Solution {
+
+    int max = Integer.MIN_VALUE;
+
+    public int maxPathSum(TreeNode root){
+        helper(root);
+        return max;
+    }
+
+    public int helper(TreeNode root) {
+        if (root == null) return 0;
+        int left = Math.max(0, helper(root.left));
+        int right = Math.max(0, helper(root.right));
+        max = Math.max(max, left + right + root.val);
+        return Math.max(left, right) + root.val;
+
+    }
+}
+
+【Leetcode-easy-136】 Single Number 数组中的单一数
+思路：位运算——异或运算，任何整数和0异或结果是它本身，一个整数异或它本身结果等于0。
+可以进一步推出：一个整数异或另一个整数两次结果是它本身。根据这个特点，我们把数组中所有的数字都异或起来，
+则每对相同的数字都会得0，然后最后剩下来的数字就是那个只有1次的数字
+
+class Solution {
+    public int singleNumber(int[] nums) {
+        int res = 0;
+        for (int num : nums)
+            res ^= num;
+        return res;
+    }
+}
+
+【Leetcode-Easy-141】 Linked List Cycle 单链表中的环
+思路：典型快指针和慢指针，只需要设两个指针，一个每次走一步的慢指针和一个每次走两步的快指针，如果链表里有环的话，两个指针最终肯定会相遇。
+
+/**
+ * Definition for singly-linked list.
+ * class ListNode {
+ *     int val;
+ *     ListNode next;
+ *     ListNode(int x) {
+ *         val = x;
+ *         next = null;
+ *     }
+ * }
+ */
+public class Solution {
+    public boolean hasCycle(ListNode head) {
+        if (head == null || head.next == null) return false;
+        ListNode quick = head;
+        ListNode slow = head;
+
+        while (quick != null && slow != null){
+            if (quick.next != null) quick = quick.next.next;
+            else return false;
+            slow = slow.next;
+            if (quick == slow) return true;
+        }
+
+        return false;
+    }
+}
+
+【Leetcode-hard-146】 LRU Cache 最近最少使用页面置换缓存器
+思路：这道题让我们实现一个LRU缓存器，LRU是Least Recently Used的简写，就是最近最少使用的意思。那么这个缓存器主要有两个成员函数，get和put，
+其中get函数是通过输入key来获得value，如果成功获得后，这对(key, value)升至缓存器中最常用的位置（顶部），如果key不存在，则返回-1。
+而put函数是插入一对新的(key, value)，如果原缓存器中有该key，则需要先删除掉原有的，将新的插入到缓存器的顶部。如果不存在，则直接插入到顶部。
+若加入新的值后缓存器超过了容量，则需要删掉一个最不常用的值，也就是底部的值。具体实现时我们需要三个私有变量，cap,l和m，其中cap是缓存器的容量大小，
+l是保存缓存器内容的列表，m是哈希表，保存关键值key和缓存器各项的迭代器之间映射，方便我们以O(1)的时间内找到目标项。
+然后我们再来看get和put如何实现，get相对简单些，我们在m中查找给定的key，如果存在则将此项移到顶部，并返回value，若不存在返回-1。
+对于put，我们也是现在m中查找给定的key，如果存在就删掉原有项，并在顶部插入新来项，然后判断是否溢出，若溢出则删掉底部项(最不常用项)。
+
+class LRUCache {
+
+    private int cap = 10;
+    // value的类型是Node，因为在后面会根据结点获取key，所以不能简单地将value的类型定义为V
+    private HashMap<K, Node> map;  // 保证访问结点的速度为O(1)
+    private Node dummyNode;  // 双向循环链表的头结点
+
+
+    private class Node{
+        int key;
+        int val;
+        Node next;
+        Node prev;
+
+        public Node(){}
+        public Node(int key, int val){
+            this.key = key;
+            this.val = val;
+        }
+    }
+
+    public LRUCache(int capacity) {
+        this.cap = capacity;
+        this.dummyHead = new Node();
+        this.dummyHead.next = this.dummyHead;
+        this.dummyHead.prev = this.dummyHead;
+    }
+
+
+    public int get(int key) {
+        Node node = map.get(key);
+        int result = -1;
+        if (node != null){
+            result = node.val;
+            // 删除当前结点并将其插入到链表头部
+            moveToHead(node);
+        }
+        return result;
+    }
+
+
+    private void moveToHead(Node node){
+        deleteThisNode(node);
+        insertIntoHead(node);
+    }
+
+
+    // 在双向循环量表中删除一个结点（结点个数大于等于2，也即不考虑只有一个dummyHead结点的情况）
+    private void deleteThisNode(Node node){
+        Node prevNode = node.prev;
+        Node nextNode = node.next;
+        prevNode.next = nextNode;
+        nextNode.prev = prevNode;
+        node.prev = null;
+        node.next = null;
+    }
+
+【Leetcode-medium-150】 Evaluate Reverse Polish Notation 计算逆波兰表达式
+思路：这道题应该是栈的完美应用啊，从前往后遍历数组，遇到数字则压入栈中，遇到符号，则把栈顶的两个数字拿出来运算，把结果再压入栈中，直到遍历完整个数组，栈顶数字即为最终答案
+
+Evaluate the value of an arithmetic expression in Reverse Polish Notation.
+Valid operators are +, -, *, /. Each operand may be an integer or another expression.
+Some examples:
+  ["2", "1", "+", "3", "*"] -> ((2 + 1) * 3) -> 9
+  ["4", "13", "5", "/", "+"] -> (4 + (13 / 5)) -> 6
+1
+2
+3
+4
+5
+import java.util.*;
+class Solution {
+    public int evalRPN(String[] tokens) {
+        if (tokens == null || tokens.length == 0)
+            throw new RuntimeException("illegal argument exception.");
+        LinkedList<Integer> stack = new LinkedList<>();
+        HashSet<String> set = new HashSet<>();
+        set.add("+");
+        set.add("-");
+        set.add("*");
+        set.add("/");
+
+        for (String token : tokens){
+            if (set.contains(token)){
+                int num2 = Integer.valueOf(stack.pop());
+                int num1 = Integer.valueOf(stack.pop());
+                switch(token){
+                    case "+" :
+                        stack.push(num1 + num2);
+                        break;
+                    case "-" :
+                        stack.push(num1 - num2);
+                        break;
+                    case "*" :
+                        stack.push(num1 * num2);
+                        break;
+                    case "/" :
+                        stack.push(num1 / num2);
+                        break;
+                }
+            }else{
+                stack.push(Integer.valueOf(token));
+            }
+        }
+        return stack.peek();
+    }
+}
+
+【Leetcode-Easy-155】 Min Stack 最小栈
+Design a stack that supports push, pop, top, and retrieving the minimum element in constant time.
+push(x) -- Push element x onto stack.
+pop() -- Removes the element on top of the stack.
+top() -- Get the top element.
+getMin() -- Retrieve the minimum element in the stack.
+
+思路：双栈
+这道最小栈跟原来的栈相比就是多了一个功能，可以返回该栈的最小值。使用两个栈来实现，一个栈来按顺序存储push进来的数据，另一个用来存出现过的最小值。
+
+class MinStack {
+
+    private LinkedList<Integer> dataStack = null;
+    private LinkedList<Integer> minStack = null;
+
+    /** initialize your data structure here. */
+    public MinStack() {
+        dataStack = new LinkedList<>();
+        minStack = new LinkedList<>();
+    }
+
+    public void push(int x) {
+        dataStack.push(x);
+        if (minStack.isEmpty()) minStack.push(x);
+        else minStack.push(Math.min(minStack.peek(), x));
+    }
+
+    public void pop() {
+        if(!minStack.isEmpty()) minStack.pop();
+        if(!dataStack.isEmpty()) dataStack.pop();
+    }
+
+    public int top() {
+        return dataStack.peek();
+    }
+
+    public int getMin() {
+        return minStack.peek();
+    }
+}
+
+【Leetcode-Easy-160】 Intersection of Two Linked Lists 求两个链表的交点
+For example, the following two linked lists:
+
+A:          a1 → a2
+                      ↘
+                        c1 → c2 → c3
+                      ↗
+B:     b1 → b2 → b3
+begin to intersect at node c1.
+
+Notes:
+Your code should preferably run in O(n) time and use only O(1) memory.
+
+思路：
+链表的双指针应用。计算两条链表的长度； 使用两个指针“右对齐”两个链表； 查找相同的结点，如果两个链长度相同的话，那么对应的一个个比下去就能找到，所以只需要把长链表变短即可。具体算法为：分别遍历两个链表，得到分别对应的长度。然后求长度的差值，把较长的那个链表向后移动这个差值的个数，然后一一比较即可。
+
+/**
+ * Definition for singly-linked list.
+ * public class ListNode {
+ *     int val;
+ *     ListNode next;
+ *     ListNode(int x) {
+ *         val = x;
+ *         next = null;
+ *     }
+ * }
+ */
+public class Solution {
+    public ListNode getIntersectionNode(ListNode headA, ListNode headB) {
+        int len1 = lenOfLinkedList(headA);
+        int len2 = lenOfLinkedList(headB);
+        // "右对齐"两条链表
+        int diff = len1 - len2;
+        if (diff < 0){
+            diff = - diff;
+            while (diff > 0){
+                headB = headB.next;
+                diff --;
+            }
+        }else{
+            while (diff > 0){
+                headA = headA.next;
+                diff --;
+            }
+        }
+        // 查找两条链表的公共节点
+        while (headA != null && headB != null){
+            if (headA == headB){
+                return headA;
+            }
+            headA = headA.next;
+            headB = headB.next;
+        }
+        return null;
+    }
+
+    private int lenOfLinkedList(ListNode head){
+        int len = 0;
+        while (head != null){
+            len ++;
+            head = head.next;
+        }
+        return len;
+    }
+}
+
+【Leetcode-Easy-169】 Majority Element
+思路
+充分使用数据的特征
+1
+2
+class Solution {
+    public int majorityElement(int[] nums) {
+        int counter = 0;
+        int curr = nums[0];
+        for (int i = 0; i < nums.length; i ++){
+            if (counter == 0) curr = nums[i];
+
+            if (nums[i] == curr) counter ++;
+            else{
+                counter --;
+                if (counter <= 0) counter = 0;
+            }
+        }
+        return curr;
+    }
+}
+
+【Leetcode-Easy-198】 House Robber
+思路
+两种状态，抢或不抢，使用列长为2的二维数组表示。
+1
+2
+class Solution {
+    public int rob(int[] nums) {
+        int[][] dp = new int[nums.length+1][2];
+        // dp[i][1] means we rob the current house and dp[i][0] means we don't,
+
+        for (int i = 1; i < dp.length; i ++){
+            dp[i][0] = Math.max(dp[i-1][0], dp[i-1][1]);  // 不抢
+            dp[i][1] = dp[i-1][0] + nums[i-1];   // 抢
+        }
+        return Math.max(dp[nums.length][0], dp[nums.length][1]);
+    }
+}
+
+第201-300题
+【Leetcode-Easy-206】 Reverse Linked List
+思路
+双指针
+1
+2
+/**
+ * Definition for singly-linked list.
+ * public class ListNode {
+ *     int val;
+ *     ListNode next;
+ *     ListNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    public ListNode reverseList(ListNode head) {
+        if (head == null || head.next == null) return head;
+
+        ListNode first = head;
+        first.next = null;
+        ListNode second = head.next;
+
+        while (second != null){
+            ListNode tempNode = second.next;
+            second.next = first;
+            first = second;
+            second = tempNode;
+        }
+        return first;
+    }
+}
+
+【Leetcode-easy-226】 Invert Binary Tree
+递归
+
+和剑指offer 面试题19 二叉树的镜像基本一样。
+1
+2
+3
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+
+    public TreeNode invertTree(TreeNode root) {
+        mirrorTree(root);
+        return root;
+    }
+
+    private void mirrorTree(TreeNode root) {
+        if (root == null) return;
+
+        TreeNode tmp = root.left;
+        root.left = root.right;
+        root.right = tmp;
+
+        mirrorTree(root.left);
+        mirrorTree(root.right);
+    }
+}
+
+【Leetcode-Easy-234】 Palindrome Linked List
+思路
+双指针找到链表的中间结点；
+反转链表的后半部分；
+比较链表的前半部分和“后半部分”。
+
+/**
+ * Definition for singly-linked list.
+ * public class ListNode {
+ *     int val;
+ *     ListNode next;
+ *     ListNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    public boolean isPalindrome(ListNode head) {
+        if (head == null || head.next == null) return true;
+
+        ListNode fast = head;
+        ListNode slow = head;
+
+        while (fast != null && fast.next != null){
+            fast = fast.next.next;
+            slow = slow.next;
+        }
+
+        // slow 是链表后半截的头指针
+        if (fast != null) slow = slow.next;
+
+        ListNode head1 = head;
+        ListNode head2 = reverseList(slow); // 反转链表的后半截
+
+        while (head1 != null && head2 != null){
+            if (head1.val != head2.val) return false;
+
+            head1 = head1.next;
+            head2 = head2.next;
+        }
+
+        return true;
+
+    }
+
+    // 反转链表
+    private ListNode reverseList(ListNode head){
+        if (head == null || head.next == null) return head;
+
+        ListNode first = head;
+        ListNode second = head.next;
+        first.next = null;  // 表示链表末尾
+        while (second != null){
+            ListNode tempNode = second.next;
+            second.next = first;
+            first = second;
+            second = tempNode;
+        }
+        return first;
+    }
+}
+
+【Leetcode-Medium-238】 Product of Array Except Self
+思路：寻找规律，
+将每因子分为两种部分，左半部分和右半部分。
+先计算左半部分的乘积，把结果存储到返回值中；
+然后循环计算右半部分的乘积，不需要额外的存储空间。
+
+class Solution {
+    /*
+    [1, 2, 3, 4]
+
+    [-, 2, 3 ,4]
+    [1, -, 3, 4]
+    [1, 2, -, 4]
+    [1, 2, 3, -]
+
+    */
+    public int[] productExceptSelf(int[] nums) {
+        int[] res = new int[nums.length];
+
+        res[0] = 1;
+        for (int i = 1; i < nums.length; i ++){
+            res[i] = res[i-1] * nums[i-1];
+        }
+
+        int mul = 1;
+        for (int j = nums.length-1; j > 0; j --){
+            mul *= nums[j];
+            res[j-1] *= mul;
+        }
+
+        return res;
+    }
+}
+
+【Leetcode-Easy-283】 Move Zeroes 移动零
+思路：需要用两个指针，一个不停的向后扫，找到非零位置，然后和前面那个指针交换位置即可
+
+// For example, given nums = [0, 1, 0, 3, 12], after calling your function, nums should be [1, 3, 12, 0, 0].
+
+public void moveZeroes(int[] nums) {
+        int pos = 0;
+        for (int num : nums){
+            if (num != 0) nums[pos++] = num;
+        }
+
+        while (pos < nums.length){
+            nums[pos++] = 0;
+        }
+    }
+
+第301-400题
+【Leetcode-Medium338】 Counting Bits 计数位
+思路
+发现规律：
+An easy recurrence for this problem is f[i] = f[i / 2] + i % 2.
+
+/**
+
+An easy recurrence for this problem is f[i] = f[i / 2] + i % 2.
+
+i % 2 == (i & 1), true
+
+*/
+
+class Solution {
+    public int[] countBits(int num) {
+        int[] result = new int[num+1];
+        for (int i = 1; i <= num; i ++)
+            result[i] = result[i/2] + i % 2;
+        return result;
+    }
+}
+
+第401-500题
+【Leetcode-easy-448】 Find All Numbers Disappeared in an Array 找出数组中所有消失的数字
+思路：充分使用数组长度和数组元素大小的关系，数组元素可以作为数组的下标使用
+
+public List<Integer> findDisappearedNumbers(int[] nums) {
+        List<Integer> list = new ArrayList<>();
+        for (int i = 0; i < nums.length; i ++){
+            int index = Math.abs(nums[i]) - 1;  // 元素关联的下标
+            if (nums[index] > 0)  nums[index] = -nums[index]; // 元素标记下标对应数字是否出现
+        }
+        for (int j = 0; j < nums.length; j ++){
+            if (nums[j] > 0) list.add(j+1);
+        }
+        return list;
+    }
+
+【Leetcode-easy-463】 Island Perimeter 岛屿周长
+Example:
+
+[[0,1,0,0],
+ [1,1,1,0],
+ [0,1,0,0],
+ [1,1,0,0]]
+
+Answer: 16
+
+思路：扩展边界
+
+class Solution {
+    public int islandPerimeter(int[][] grid) {
+
+        int[][] newGrid = new int[grid.length+2][grid[0].length+2];
+
+        int perimeter = 0;
+
+        for (int i = 0; i < grid.length; i ++){
+            for (int j = 0; j < grid[0].length; j ++){
+                newGrid[i+1][j+1] = grid[i][j];
+            }
+        }
+
+        for (int i = 1; i < newGrid.length-1; i ++){
+            for (int j = 1; j < newGrid[0].length-1; j ++){
+                if (newGrid[i][j] == 1){
+                    if (newGrid[i-1][j] == 0) perimeter ++;  // 若1的上边是0，则周长加1
+                    if (newGrid[i][j+1] == 0) perimeter ++;  // 若1的右边是0，则周长加1
+                    if (newGrid[i+1][j] == 0) perimeter ++;  // 若1的下边是0，则周长加1
+                    if (newGrid[i][j-1] == 0) perimeter ++;  // 若1的左边是0，则周长加1
+                }
+            }
+        }
+        return perimeter;
+    }
+}
+
+【Leetcode-Medium-494】 Target Sum 目标和
+Example 1:
+Input: nums is [1, 1, 1, 1, 1], S is 3.
+Output: 5
+Explanation:
+
+-1+1+1+1+1 = 3
++1-1+1+1+1 = 3
++1+1-1+1+1 = 3
++1+1+1-1+1 = 3
++1+1+1+1-1 = 3
+
+思路：递归求解，加上当前数或者减去当前数
+
+class Solution {
+    int counter = 0;
+    public int findTargetSumWays(int[] nums, int S) {
+        calculate(nums, S, 0, 0);
+        return counter;
+    }
+
+    private void calculate(int[] nums, int target, int i, int sum){
+        if (i == nums.length){
+            if (sum == target) counter ++;
+        } else { // 有条件的递归
+            calculate(nums, target, i+1, sum+nums[i]);  // 加上当前数字
+            calculate(nums, target, i+1, sum-nums[i]);  // 减去当前数字
+        }
+    }
+}
+
+第501-600题
+【Leetcode-easy-543】 Diameter of Binary Tree 二叉树的直径
+Example:
+Given a binary tree
+
+          1
+         / \
+        2   3
+       / \
+      4   5
+
+
+Return 3, which is the length of the path [4,2,1,3] or [5,2,1,3].
+
+思路：对于每一个结点，经过它的最长路径的长度 = 它的左子树的最大深度 + 右子树的最大深度。
+
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+
+    int max = 0;
+
+    public int diameterOfBinaryTree(TreeNode root) {
+        maxDepth(root);
+        return max;
+    }
+
+    private int maxDepth(TreeNode root){
+        if (root == null) return 0;
+        int l = maxDepth(root.left);
+        int r = maxDepth(root.right);
+        max = Math.max(max, l+r);
+        return Math.max(l, r) + 1;
+    }
+}
+
+【Leetcode-Medium-547】 Friend Circles 朋友圈
+Input:
+[[1,1,0],
+ [1,1,0],
+ [0,0,1]]
+Output: 2
+
+思路:深度优先搜索
+
+class Solution {
+    public int findCircleNum(int[][] M) {
+        int[] visited = new int[M.length];
+        int counter = 0;
+        for (int i = 0; i < M.length; i ++){
+            if (visited[i] == 0){
+                dfs(M, i, visited);
+                counter ++;
+            }
+        }
+        return counter;
+    }
+
+
+    private void dfs(int[][] M, int i, int[] visited){
+        for (int j = 0; j < M[i].length; j ++){
+            // i 和 j 相连，而且j没有被访问过
+            if (M[i][j] == 1 && visited[j] == 0){
+                visited[j] = 1;
+                dfs(M, j, visited);
+            }
+        }
+
+    }
+}
+
+【Leetcode-easy-572】 Subtree of Another Tree 另一个树的子树
+Example 1:
+Given tree s:
+
+     3
+    / \
+   4   5
+  / \
+ 1   2
+Given tree t:
+
+   4
+  / \
+ 1   2
+Return true, because t has the same structure and node values with a subtree of s.
+
+
+Example 2:
+Given tree s:
+
+     3
+    / \
+   4   5
+  / \
+ 1   2
+    /
+   0
+Given tree t:
+
+   4
+  / \
+ 1   2
+Return false.
+
+从题目中的第二个例子中可以看出，子树必须是从叶结点开始的，中间某个部分的不能算是子树，那么我们转换一下思路，是不是从s的某个结点开始，跟t的所有结构都一样，那么问题就转换成了判断两棵树是否相同，也就是Same Tree的问题了，这点想通了其实代码就很好写了，用递归来写十分的简洁，我们先从s的根结点开始，跟t比较，如果两棵树完全相同，那么返回true，否则就分别对s的左子结点和右子结点调用递归再次来判断是否相同，只要有一个返回true了，就表示可以找得到
+
+class Solution {
+    public boolean isSubtree(TreeNode s, TreeNode t) {
+        boolean result = false;
+        if (s != null && t != null){
+            if (s.val == t.val) result = validate(s, t);
+            if (!result) result = isSubtree(s.left, t);
+            if (!result) result = isSubtree(s.right, t);
+        }
+        return result;
+    }
+
+    private boolean validate(TreeNode root1, TreeNode root2){
+        if (root1 == null && root2 == null) return true;
+        // if (root1 == null) return false;
+        if (root1 == null && root2 != null) return false;
+        if (root1 != null && root2 == null) return false;
+        if (root1.val != root2.val) return false;
+        return validate(root1.left, root2.left) && validate(root1.right, root2.right);
+    }
+}
+
+【Leetcode-Easy-581】 Shortest Unsorted Continuous Subarray 最短无序连续子数组
+思路
+发现规律：
+起始点的特征，右边存在小于其的元素；
+终止点的特征，左边存在大于其的元素。
+
+class Solution {
+
+    // [2, 6, 4, 8, 10, 9, 15]
+    // [6, 4, 8, 10, 9]
+    // 起始点的特征，右边存在小于其的元素；
+    // 终止点的特征，左边存在大于其的元素。
+
+
+    public int findUnsortedSubarray(int[] nums) {
+
+        int start = 0;
+        int end = 0;
+
+        int max = nums[0];  // 当前元素左边范围内的最大值，从前面往后面查找起始元素
+        int min = nums[nums.length-1];  // 从后面往前查找终止元素
+
+
+        // 从左往右遍历，如果A[i]小于左边所有元素的最大值，则其可能是右边界
+        for (int i = 1; i < nums.length; i ++){
+            max = Math.max(max, nums[i]);
+            if (nums[i] < max) end = i;
+        }
+
+
+        // 从右往左遍历，如果A[j]大于右边所有元素的最小值，则其可能是左边界
+        for (int j = nums.length-2; j >= 0; j --){
+            min = Math.min(min, nums[j]);
+            if (nums[j] > min) start = j;
+        }
+
+        return end == 0 ? 0 : end - start + 1;
+    }
+
+
+
+    // Time Limit Exceeded
+    public int findUnsortedSubarray01(int[] nums) {
+
+        int start = 0;
+        int end = 0;
+
+        outer:for (int i = 0; i < nums.length; i ++){
+            for (int j = i+1; j < nums.length; j ++){
+                if (nums[i] > nums[j]){  // 如果后面存在元素小于当前元素，则该元素需要排序
+                    start = i;
+                    break outer;
+                }
+            }
+        }
+
+
+        for (int i = start; i < nums.length; i ++){
+            for (int j = i+1; j < nums.length; j ++){
+                if (nums[i] > nums[j]){  // 如果后面存在元素小于当前元素，则该元素需要排序
+                    end = Math.max(end, j);
+                }
+            }
+        }
+
+        return end == 0 ? 0 : end - start + 1;
+    }
+
+}
+
+【Leetcode-Medium-583】 Delete Operation for Two Strings 两个字符串的删除操作
+Example 1:
+
+Input: "sea", "eat"
+Output: 2
+Explanation: You need one step to make "sea" to "ea" and another step to make "eat" to "ea".
+
+class Solution {
+
+    // 最长公共子序列，LCS
+    public int minDistance(String word1, String word2) {
+
+        int W = word1.length() + 1;
+        int H = word2.length() + 1;
+
+        int[][] states = new int[H][W];
+
+        for (int i = 1; i < H; i ++){
+            char ch1 = word2.charAt(i-1);
+            for (int j = 1; j < W; j ++){
+                char ch2 = word1.charAt(j-1);
+                if (ch1 == ch2) states[i][j] = states[i-1][j-1] + 1;
+                else states[i][j] = Math.max(states[i][j-1], states[i-1][j]);
+            }
+        }
+
+        int maxLen = 0;
+        for (int i = 0; i < H; i ++){
+            for (int j = 0; j < W; j ++){
+                maxLen = Math.max(maxLen, states[i][j]);
+            }
+        }
+
+        return word1.length()+word2.length()-maxLen*2;
+    }
+}
+
+第601-700题
+【Leetcode-easy-617】 Merge Two Binary Trees 合并二叉树
+Input:
+    Tree 1                     Tree 2
+          1                         2
+         / \                       / \
+        3   2                     1   3
+       /                           \   \
+      5                             4   7
+Output:
+Merged tree:
+         3
+        / \
+       4   5
+      / \   \
+     5   4   7
+
+
+Note: The merging process must start from the root nodes of both trees.
+
+这道题给了我们两个二叉树，让我们合并成一个，规则是，都存在的结点，就将结点值加起来，否则空的位置就由另一个树的结点来代替。那么根据过往经验，处理二叉树问题的神器就是递归，那么我们来看递归函数如何去写。根据题目中的规则，我们知道如果要处理的相同位置上的两个结点都不存在的话，直接返回即可，如果t1存在，t2不存在，那么我们就以t1的结点值建立一个新结点，然后分别对t1的左右子结点和空结点调用递归函数，反之，如果t1不存在，t2存在，那么我们就以t2的结点值建立一个新结点，然后分别对t2的左右子结点和空结点调用递归函数。如果t1和t2都存在，那么我们就以t1和t2的结点值之和建立一个新结点，然后分别对t1的左右子结点和t2的左右子结点调用递归函数
+
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    public TreeNode mergeTrees(TreeNode t1, TreeNode t2) {
+        if (t1 == null) return t2;
+        if (t2 == null) return t1;
+        t1.val += t2.val;
+        t1.left = mergeTrees(t1.left, t2.left);
+        t1.right = mergeTrees(t1.right, t2.right);
+        return t1;
+    }
+}
+
+【Leetcode-Medium-647】 Palindromic Substrings 最长连续递增序列
+Input: [1,3,5,4,7]
+Output: 3
+Explanation: The longest continuous increasing subsequence is [1,3,5], its length is 3.
+Even though [1,3,5,7] is also an increasing subsequence, it's not a continuous one where 5 and 7 are separated by 4.
+
+
+Example 2:
+
+Input: [2,2,2,2,2]
+Output: 1
+Explanation: The longest continuous increasing subsequence is [2], its length is 1.
+
+思路：暴力验证
+
+class Solution {
+    public int countSubstrings(String s) {
+        int counter = 0;
+
+        for (int i = 0; i < s.length(); i ++){
+            for (int j = i+1; j < s.length()+1; j ++){
+                String str = s.substring(i, j);
+                if (isPalindromicString(str))
+                    counter ++;
+            }
+        }
+        return counter;
+    }
+
+
+    private boolean isPalindromicString(String s){
+        if (s.length() == 1) return true;
+
+        boolean bool = true;
+        for (int i = 0; i < s.length()/2; i ++){
+            if (s.charAt(i) != s.charAt(s.length()-1-i)){
+                bool = false;
+                break;
+            }
+        }
+        return bool;
+
+    }
+}
