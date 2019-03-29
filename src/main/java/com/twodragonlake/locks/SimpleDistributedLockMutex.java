@@ -14,15 +14,15 @@ import java.util.concurrent.TimeUnit;
 /**锁接口的具体实现，主要借助于继承的父类BaseDistributedLock来实现的接口方法
  * 该父类是基于Zookeeper实现分布式锁的具体细节实现*/
 public  class SimpleDistributedLockMutex  extends BaseDistributedLock  implements  DistributedLock {
-     /*用于保存Zookeeper中实现分布式锁的节点，如名称为locker：/locker，
-    *该节点应该是持久节点，在该节点下面创建临时顺序节点来实现分布式锁 */
+    /*用于保存Zookeeper中实现分布式锁的节点，如名称为locker：/locker，
+     *该节点应该是持久节点，在该节点下面创建临时顺序节点来实现分布式锁 */
     private  final String  basePath;
 
-   /*锁名称前缀，locker下创建的顺序节点例如都以lock-开头，这样便于过滤无关节点
-    *这样创建后的节点类似：lock-00000001，lock-000000002*/
+    /*锁名称前缀，locker下创建的顺序节点例如都以lock-开头，这样便于过滤无关节点
+     *这样创建后的节点类似：lock-00000001，lock-000000002*/
     private  static final String  LOCK_NAME ="lock-";
 
-   /*用于保存某个客户端在locker下面创建成功的顺序节点，用于后续相关操作使用（如判断）*/
+    /*用于保存某个客户端在locker下面创建成功的顺序节点，用于后续相关操作使用（如判断）*/
     private String  ourLockPath;
 
     /**
@@ -45,8 +45,8 @@ public  class SimpleDistributedLockMutex  extends BaseDistributedLock  implement
      */
 
     public SimpleDistributedLockMutex(ZkClientExt client, String basePath){
-       /*调用父类的构造方法在Zookeeper中创建basePath节点，并且为basePath节点子节点设置前缀
-       *同时保存basePath的引用给当前类属性*/
+        /*调用父类的构造方法在Zookeeper中创建basePath节点，并且为basePath节点子节点设置前缀
+         *同时保存basePath的引用给当前类属性*/
         super(client,basePath,LOCK_NAME);
         this.basePath = basePath;
     }
