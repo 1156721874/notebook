@@ -1,5 +1,6 @@
 package com.ceaser.thread.chapter03;
 
+
 public class SafeLazyInitialization {
     private static Instance instance;
 

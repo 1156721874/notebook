@@ -1,5 +1,6 @@
 package com.ceaser.thread.chapter03;
 
+
 class VolatileExample {
     int              a    = 0;
     volatile boolean flag = false;
@@ -12,7 +13,8 @@ class VolatileExample {
     public void reader() {
         if (flag) { //3
             int i = a; //4
-            //����
+            //……
         }
     }
 }
+

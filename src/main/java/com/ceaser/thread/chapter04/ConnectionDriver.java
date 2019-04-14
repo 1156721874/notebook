@@ -1,5 +1,6 @@
 package com.ceaser.thread.chapter04;
 
+
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -19,9 +20,9 @@ public class ConnectionDriver {
         }
     }
 
-    // ����һ��Connection�Ĵ�����commitʱ����1��
+    // 创建一个Connection的代理，在commit时休眠1秒
     public static final Connection createConnection() {
         return (Connection) Proxy.newProxyInstance(ConnectionDriver.class.getClassLoader(), new Class<?>[] { Connection.class },
-            new ConnectionHandler());
+                new ConnectionHandler());
     }
 }

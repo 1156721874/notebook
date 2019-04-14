@@ -7,12 +7,11 @@ package com.ceaser.thread.chapter02;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-
 /**
- * ������
- * 
+ * 计数器
+ *
  * @author tengfei.fangtf
- * @version $Id: Snippet.java, v 0.1 2015-7-31 ����11:32:42 tengfei.fangtf Exp $
+ * @version $Id: Snippet.java, v 0.1 2015-7-31 下午11:32:42 tengfei.fangtf Exp $
  */
 public class Counter {
 
@@ -39,7 +38,7 @@ public class Counter {
             t.start();
 
         }
-        // �ȴ������߳�ִ�����
+        // 等待所有线程执行完成
         for (Thread t : ts) {
             try {
                 t.join();
@@ -54,7 +53,7 @@ public class Counter {
     }
 
     /**
-     * ʹ��CASʵ���̰߳�ȫ������
+     * 使用CAS实现线程安全计数器
      */
     private void safeCount() {
         for (;;) {
@@ -67,7 +66,7 @@ public class Counter {
     }
 
     /**
-     * ���̰߳�ȫ������
+     * 非线程安全计数器
      */
     private void count() {
         i++;
